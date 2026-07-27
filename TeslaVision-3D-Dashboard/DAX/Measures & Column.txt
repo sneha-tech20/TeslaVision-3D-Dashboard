@@ -1,0 +1,119 @@
+                                                    Measures & Columns
+
+SelectedModel = SELECTEDVALUE(ModelSelector_Slicer[ModelCode], "ALL")
+
+Selected3DUrl = 
+IF(
+    [SelectedModel] = "ALL",
+    
+    // Default Sketchfab embed URL when nothing is selected
+    "https://sketchfab.com/models/587a0833e60f465090145b139f6c1bfc/embed",
+    
+    // Get the 3D URL from ModelSelector table for the selected model
+    CALCULATE(
+        SELECTEDVALUE(ModelSelector[3D Url]),
+        FILTER(
+            ModelSelector,
+            ModelSelector[ModelCode] = [SelectedModel]
+        )
+    )
+)
+
+OdometerBin = 
+SWITCH(
+    TRUE(),
+    'Tesla Stock Dataset'[odometer] <= 5000, "0-5k",
+    'Tesla Stock Dataset'[odometer] <= 10000, "5k-10k",
+    'Tesla Stock Dataset'[odometer] <= 15000, "10k-15k",
+    'Tesla Stock Dataset'[odometer] <= 20000, "15k-20k",
+    'Tesla Stock Dataset'[odometer] <= 25000, "20k-25k",
+    'Tesla Stock Dataset'[odometer] <= 30000, "25k-30k",
+    'Tesla Stock Dataset'[odometer] <= 35000, "30k-35k",
+    'Tesla Stock Dataset'[odometer] <= 40000, "35k-40k",
+    "40k+"
+)
+
+
+AveragePrice = 
+VAR selected = [SelectedModel]
+RETURN
+IF(
+    selected = "ALL",
+    AVERAGE('Tesla Stock Dataset'[price]),
+    CALCULATE(
+        AVERAGE('Tesla Stock Dataset'[price]),
+        'Tesla Stock Dataset'[model] = selected
+    )
+)
+
+AverageEMI = 
+VAR selected = [SelectedModel]
+RETURN
+IF(
+    selected = "ALL",
+    AVERAGE('Tesla Stock Dataset'[EMI]),
+    CALCULATE(
+        AVERAGE('Tesla Stock Dataset'[EMI]),
+        'Tesla Stock Dataset'[model] = selected
+    )
+)
+
+MedianOdometer = 
+VAR selected = [SelectedModel]
+RETURN
+IF(
+    selected = "ALL",
+    MEDIAN('Tesla Stock Dataset'[odometer]),
+    CALCULATE(
+        MEDIAN('Tesla Stock Dataset'[odometer]),
+        'Tesla Stock Dataset'[model] = selected
+    )
+)
+
+PercentWithAccident = 
+VAR selected = [SelectedModel]
+RETURN
+IF(
+    selected = "ALL",
+    DIVIDE(
+        CALCULATE(COUNTROWS('Tesla Stock Dataset'), 'Tesla Stock Dataset'[accident_history] <> "No Accidents"),
+        COUNTROWS('Tesla Stock Dataset'),
+        0
+    ),
+    DIVIDE(
+        CALCULATE(
+            COUNTROWS('Tesla Stock Dataset'),
+            'Tesla Stock Dataset'[model] = selected,
+            'Tesla Stock Dataset'[accident_history] <> "No Accidents"
+        ),
+        CALCULATE(
+            COUNTROWS('Tesla Stock Dataset'),
+            'Tesla Stock Dataset'[model] = selected
+        ),
+        0
+    )
+)
+
+PercentNoAccident = 
+VAR selected = [SelectedModel]
+RETURN
+IF(
+    selected = "ALL",
+    DIVIDE(
+        CALCULATE(COUNTROWS('Tesla Stock Dataset'), 'Tesla Stock Dataset'[accident_history] = "No Accidents"),
+        COUNTROWS('Tesla Stock Dataset'),
+        0
+    ),
+    DIVIDE(
+        CALCULATE(
+            COUNTROWS('Tesla Stock Dataset'),
+            'Tesla Stock Dataset'[model] = selected,
+            'Tesla Stock Dataset'[accident_history] = "No Accidents"
+        ),
+        CALCULATE(
+            COUNTROWS('Tesla Stock Dataset'),
+            'Tesla Stock Dataset'[model] = selected
+        ),
+        0
+    )
+)
